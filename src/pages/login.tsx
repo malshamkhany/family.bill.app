@@ -1,38 +1,44 @@
 import SnackNotification from "@/components/SnackNotification";
+import { useRouter } from "next/navigation";
 import React, { FormEvent, useRef, useState } from "react";
 
 const Login = () => {
+    const router = useRouter();
     const snackRef = useRef(null);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        snackRef.current.open("Hello", "error");
-        // const formData = new FormData(e.currentTarget);
-        // const username = formData.get("username");
-        // const password = formData.get("password");
+        const formData = new FormData(e.currentTarget);
+        const username = formData.get("username");
+        const password = formData.get("password");
 
-        // try {
-        //     const response = await fetch(
-        //         "http://localhost:3000/api/user/authenticate",
-        //         {
-        //             method: "POST",
-        //             headers: {
-        //                 "Content-Type": "application/json",
-        //             },
-        //             body: JSON.stringify({ userName: username, password }),
-        //         }
-        //     );
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_HOST}/api/user/login`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ userName: username, password }),
+                }
+            );
 
-        //     if (response.ok) {
-        //         // Handle successful authentication
-        //         console.log("Login successful!");
-        //     } else {
-        //         // Handle authentication failure
-        //         console.error("Login failed");
-        //     }
-        // } catch (error) {
-        //     console.error("An error occurred while logging in:", error);
-        // }
+            if (response.ok) {
+                // Handle successful authentication
+                console.log("Login successful!");
+                snackRef.current.open("Login successful", "success");
+                router.push("/", { scroll: false });
+            } else {
+                // Handle authentication failure
+                const data = await response.json();
+                snackRef.current.open(`Login failed - ${data.error}`, "error");
+                console.error(`Login failed - ${data.error}`);
+            }
+        } catch (error) {
+            snackRef.current.open("Login failed", "error");
+            console.error("An error occurred while logging in:", error);
+        }
     };
 
     return (
@@ -42,7 +48,7 @@ const Login = () => {
                     Login
                 </h2>
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
+                    <div className="mb-4 ">
                         <label htmlFor="username" className="block mb-1">
                             Username:
                         </label>
@@ -50,7 +56,7 @@ const Login = () => {
                             type="text"
                             id="username"
                             name="username"
-                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
+                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500 text-black"
                         />
                     </div>
                     <div className="mb-4">
@@ -61,7 +67,7 @@ const Login = () => {
                             type="password"
                             id="password"
                             name="password"
-                            className="w-full px-4 py-2 border text-black rounded-md focus:outline-none focus:border-blue-500"
+                            className="w-full px-4 py-2 border  rounded-md focus:outline-none focus:border-blue-500 text-black"
                         />
                     </div>
                     <button

@@ -1,12 +1,14 @@
 import Image from "next/image";
 import { Inter } from "next/font/google";
 import { GetServerSideProps, InferGetServerSidePropsType } from "next";
-import { FC, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FC, useRef, useState } from "react";
 import Link from "next/link";
 import listBill from "@/api/features/bill/listBills";
 import { Bill } from "@/api/models/bill";
 import axios from "axios";
 import BottomNavigation from "@/components/bottomNavigation";
+import SnackNotification from "@/components/SnackNotification";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +29,8 @@ export default function Home({
     isConnected,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const [Bill, setBill] = useState<Bill>(null);
+    const snackRef = useRef(null);
+    const router = useRouter();
 
     const expenses = [
         { title: "Elife", amount: "375" },
@@ -38,7 +42,6 @@ export default function Home({
     ];
 
     const handleEdit = () => {
-        // navigation.navigate("New", { expenses });]
         handleCreate();
     };
 
@@ -61,6 +64,24 @@ export default function Home({
             .catch((e) => console.log(e));
     };
 
+    const handleLogout = async () => {
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_HOST}/api/user/logout`,
+                { method: "POST" }
+            );
+
+            if (response.ok) {
+                // Handle successful authentication
+                snackRef.current.open("Logout success", "success");
+                router.push("/login", { scroll: false });
+            }
+        } catch (error) {
+            snackRef.current.open("Logout failed", "error");
+            console.error("An error occurred while logging in:", error);
+        }
+    };
+
     return (
         <>
             <div className="header container mx-auto px-6 py-4 gap-2">
@@ -71,6 +92,7 @@ export default function Home({
                     height={25}
                 />
                 <h1>Our Rent is Due</h1>
+                {/* <button onClick={handleLogout}>Logout</button> */}
             </div>
             <div className="containerMain container mx-auto px-6">
                 <div className="currentDue">
@@ -121,6 +143,7 @@ export default function Home({
                     </div>
                 </div>
             </div>
+            <SnackNotification ref={snackRef} />
             <BottomNavigation />
         </>
     );

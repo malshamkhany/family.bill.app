@@ -24,8 +24,12 @@ export default async function handler(
     if (req.method === "GET") {
         const { id } = req.body;
 
-        const user = await getUser(id);
-        res.status(200).json({ success: true, data: user });
+        try {
+            const user = await getUser(id);
+            res.status(200).json({ success: true, data: user });
+        } catch (error) {
+            res.status(400).json({ success: false, data: "bad input" });
+        }
     }
 
     res.status(400).json({ error: "method not allowed" });

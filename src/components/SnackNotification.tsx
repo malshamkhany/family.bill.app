@@ -37,7 +37,7 @@ const SnackNotification = forwardRef((props, ref) => {
         open: open,
     }));
 
-    const clx = `fixed bottom-5 right-5 ${levelState} text-white px-4 py-2 rounded shadow ${
+    const clx = `fixed bottom-14 right-14 ${levelState} text-white px-4 py-2 rounded shadow ${
         showNotification ? "opacity-100" : "opacity-0"
     } transition-opacity duration-300`;
 
