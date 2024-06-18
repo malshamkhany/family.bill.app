@@ -13,7 +13,14 @@ export default async function handler(
 
     const { userName, password } = req.body;
 
-    const user = await getUserByUserName(userName);
+    console.log(typeof userName, typeof password)
+
+    let user;
+    try {
+        user = await getUserByUserName(userName);
+    } catch (error) {
+        res.status(400).json({ error: "failed to parse hehe " + typeof user  });
+    }
 
     if (!user?._id || password !== process.env.USER_PASSWORD) {
         res.status(400).json({
