@@ -15,19 +15,18 @@ export default async function handler(
     if (req.method !== "POST"){
         return res.status(400).json({ success: false, error: "method not allowed" });
     }
-
-    const idsString = req.body;
-    let result = [];
     
-    if (idsString) {
+    
+    const ids = req.body;
+    let result = [];
+    if (ids) {
         try {
-            const ids = JSON.parse(idsString)
-
             if(!Array.isArray(ids)) 
                 throw new Error("invalid object")
 
             for (const id of ids){
-                result.push(await getContributor(id))
+                const contributor = await getContributor(id)
+                result.push(contributor)
             }
         } catch (error) {
             return res.status(400).json({ success: false, error: `contributor bill not found: ${error.message}` });

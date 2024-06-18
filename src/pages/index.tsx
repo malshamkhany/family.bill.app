@@ -110,7 +110,7 @@ export default function Home({ billId }: { billId?: string }) {
     );
   }
 
-  if (!bill) {
+  if (!bill || !billContribution) {
     return <Loader />;
   }
 
