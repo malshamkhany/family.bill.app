@@ -27,10 +27,10 @@ export default async function handler(
                     result.push(await getContributor(id))
                 }
             } catch (error) {
-                res.status(400).json({ success: false, error: `contributor bill not found: ${error.message}` });
+                return res.status(400).json({ success: false, error: `contributor bill not found: ${error.message}` });
             }
         } else {
-            res.status(400).json({ error: "paramater {ids} in url is missing" });
+            return res.status(400).json({ error: "paramater {ids} in url is missing" });
         }
         return res.status(200).json({ success: true, data: result });
     }
