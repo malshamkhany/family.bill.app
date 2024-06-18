@@ -12,7 +12,10 @@ export default async function createUser(user: User) {
     const dbContext = client.db(process.env.DB_NAME);
 
     const users = dbContext.collection("users");
-    const result = await users.insertOne(user);
+
+    const { _id, ...userData } = user;
+    
+    const result = await users.insertOne(userData);
 
     return result;
 }
