@@ -83,6 +83,9 @@ export default function Home({ billId }: { billId?: string }) {
       const ids = bill.contributors.map((c) => c.billContributionId);
       fetch("/api/billContributor/many", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(ids),
       }).then((response) => {
         response.json().then(({ data, success }) => {
