@@ -21,7 +21,12 @@ const Login = () => {
     const username = formData.get("username");
     const password = formData.get("password");
 
+    console.log(username, password)
+
     try {
+      console.log({ userName: username, password })
+      console.log(JSON.stringify({ userName: username, password }))
+
       const response = await fetch(
         `/api/user/login`,
         {
@@ -32,7 +37,7 @@ const Login = () => {
           body: JSON.stringify({ userName: username, password }),
         }
       );
-
+      console.log("response", response)
       if (response.ok) {
         // Handle successful authentication
         console.log("Login successful!");
