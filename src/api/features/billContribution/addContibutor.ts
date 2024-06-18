@@ -2,6 +2,8 @@ import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
 export default async function addContibutor(userId: string, billId: string) {
+    throw new Error("function to be implemented /  reworked")
+
     const client = await clientPromise;
     const dbContext = client.db(process.env.DB_NAME);
 

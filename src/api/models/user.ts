@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const UserSchema = z.object({
+    _id: z.string().optional(),
     userName: z.string(),
     createdAt: z.date(),
 });

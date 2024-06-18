@@ -27,6 +27,7 @@ const BottomNavigation = () => {
                 className={router.pathname === "/history" ? "active" : ""}
             >
                 <Image
+                
                     src="/icons/calendar.svg"
                     alt="calendar"
                     width={20}
@@ -35,7 +36,20 @@ const BottomNavigation = () => {
                 History
             </Link>
             <Link
-                href="/add"
+                href="/transfers"
+                passHref
+                className={router.pathname === "/transfers" ? "active" : ""}
+            >
+                <Image
+                    src="/icons/transfer.svg"
+                    alt="cash"
+                    width={20}
+                    height={20}
+                />
+                Transfers
+            </Link>
+            <Link
+                href="/bill/new"
                 passHref
                 className={router.pathname === "/add" ? "active" : ""}
             >

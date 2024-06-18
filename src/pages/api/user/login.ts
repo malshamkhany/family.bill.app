@@ -15,14 +15,17 @@ export default async function handler(
 
     const user = await getUserByUserName(userName);
 
-    if (!user || password !== process.env.USER_PASSWORD) {
+    if (!user?._id || password !== process.env.USER_PASSWORD) {
         res.status(400).json({
             success: false,
             error: "wrong username or password",
         });
     }
 
-    const jwtToken = await new jose.SignJWT({ userId: user._id })
+    const jwtToken = await new jose.SignJWT({
+        userId: user._id,
+        userName: user.userName,
+    })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
         .sign(new TextEncoder().encode(process.env.JWT_SECRET));

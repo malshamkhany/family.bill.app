@@ -5,6 +5,7 @@ type Metadata = {
     title: string;
     billDate: Date;
     status: string;
+    settlementDate: string;
 };
 
 export default async function updateBillMetadata(

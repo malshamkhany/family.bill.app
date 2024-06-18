@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const BillSchema = z.object({
+    _id: z.string().optional(),
     title: z.string(),
     billDate: z.date(),
     expenses: z.array(
@@ -15,16 +16,17 @@ const BillSchema = z.object({
         .array(
             z
                 .object({
-                    id: z.string(),
+                    billContributionId: z.string(),
+                    userId: z.string(),
                     userName: z.string(),
-                    hasSettled: z.boolean(),
-                    settlementDate: z.string().optional(),
                 })
                 .optional()
         )
         .optional(),
     status: z.string(),
+    // settlementDate: z.string().optional(),
     totalAmount: z.number().positive().optional(),
+    lastUpdated: z.date().optional(),
     createdAt: z.date(),
 });
 

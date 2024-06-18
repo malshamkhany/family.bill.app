@@ -1,5 +1,5 @@
 import updateBillExpenses from "@/api/features/bill/updateBillExpenses";
-import nestedJsonParseToDate from "@/helpers";
+import { nestedJsonParseToDate } from "@/helpers";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 type Data = {
@@ -15,7 +15,7 @@ export default async function handler(
     if (req.method === "PATCH") {
         try {
             const bill = await updateBillExpenses(
-                req.body.id,
+                req.body._id,
                 nestedJsonParseToDate(req.body.expenses, ["createdAt"])
             );
             res.status(200).json({ success: true, data: bill });

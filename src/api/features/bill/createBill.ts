@@ -1,10 +1,12 @@
 import { Bill, validate } from "@/api/models/bill";
 import clientPromise from "@/lib/mongodb";
 import listUsers from "../user/listUsers";
+import { BillContribution } from "@/api/models/billContribution";
+import createContributor from "../billContribution/createContibutor";
 
 export default async function createBill(bill: Bill) {
-    const validationResult = validate(bill);
 
+    const validationResult = validate(bill);
     if (validationResult.success === false) {
         console.log(validationResult.error.issues);
         throw new Error("Bad JSON");
@@ -15,19 +17,46 @@ export default async function createBill(bill: Bill) {
 
     const bills = dbContext.collection("bills");
 
-    //TODO: remove below and change dynamic implementation of adding contributors
-    const getContributors = await listUsers();
-    const restructure_contributors = [];
-    getContributors.forEach((i) => {
-        restructure_contributors.push({ id: i._id, userName: i.userName });
-    });
-    bill.contributors = restructure_contributors;
-
     let totalAmount = 0;
     bill.expenses.forEach((a) => (totalAmount += a.amount));
     bill.totalAmount = totalAmount;
 
-    const result = await bills.insertOne(bill);
+    const {_id, ...rest} = bill; // sperate _id cuz mongo / type does not accept insert
+    const updatedBill = {...rest};
+
+    const result = await bills.insertOne(updatedBill);
+
+    // auto-add all contributors.
+    // TODO: in future, have to user add contributors via api requests
+    const users = await listUsers();
+    let contributorList: typeof bill.contributors = [];
+    for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        const billContribution: BillContribution = {
+            billId: result.insertedId.toString(),
+            transfers: [],
+            userId: user._id.toString(),
+            userName: user.userName,
+        };
+        const created = await createContributor(billContribution);
+        if (created.acknowledged) {
+            contributorList = [
+                ...contributorList,
+                {
+                    billContributionId: created.insertedId.toString(),
+                    userId: billContribution.userId,
+                    userName: billContribution.userName,
+                },
+            ];
+        } else console.log("failed to create contributor");
+    }
+
+    if (contributorList.length > 0) {
+        await bills.updateOne(
+            { _id: result.insertedId },
+            { $set: { contributors: contributorList, lastUpdated: new Date() } }
+        );
+    }
 
     return result;
 }

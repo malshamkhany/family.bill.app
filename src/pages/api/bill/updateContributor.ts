@@ -1,6 +1,6 @@
-import addContibutor from "@/api/features/bill/addContibutor";
-import removeContributor from "@/api/features/bill/removeContributor";
-import nestedJsonParseToDate from "@/helpers";
+import addContibutor from "@/api/features/billContribution/addContibutor";
+import removeContributor from "@/api/features/billContribution/removeContributor";
+import { nestedJsonParseToDate } from "@/helpers";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 type Data = {
@@ -13,28 +13,30 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<Partial<Data>>
 ) {
-    if (req.method === "PATCH") {
-        const { mode } = req.query;
+    return res.status(400).json({ error: "endpoint under work" });
 
-        if (mode !== "add" && mode !== "remove") {
-            res.status(400).json({
-                success: false,
-                error: "mode unknown. Mode can only be 'add' or 'remove'",
-            });
-        }
+    // if (req.method === "PATCH") {
+    //     const { mode } = req.query;
 
-        try {
-            const bill =
-                mode === "add"
-                    ? await addContibutor(req.body.userId, req.body.userId)
-                    : removeContributor(req.body.userId, req.body.userId);
+    //     if (mode !== "add" && mode !== "remove") {
+    //         res.status(400).json({
+    //             success: false,
+    //             error: "mode unknown. Mode can only be 'add' or 'remove'",
+    //         });
+    //     }
 
-            res.status(200).json({ success: true, data: bill });
-        } catch (error) {
-            console.log(`${error.message} when updating bill`);
-            res.status(400).json({ success: false });
-        }
-    }
+    //     try {
+    //         const bill =
+    //             mode === "add"
+    //                 ? await addContibutor(req.body.userId, req.body.userId)
+    //                 : removeContributor(req.body.userId, req.body.userId);
 
-    res.status(400).json({ error: "method not allowed" });
+    //         res.status(200).json({ success: true, data: bill });
+    //     } catch (error) {
+    //         console.log(`${error.message} when updating bill`);
+    //         res.status(400).json({ success: false });
+    //     }
+    // }
+
+    // res.status(400).json({ error: "method not allowed" });
 }

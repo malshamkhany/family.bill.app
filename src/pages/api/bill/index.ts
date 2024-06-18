@@ -1,7 +1,8 @@
 import createBill from "@/api/features/bill/createBill";
 import getBill from "@/api/features/bill/getBill";
 import listBill from "@/api/features/bill/listBills";
-import nestedJsonParseToDate from "@/helpers";
+import updateBill from "@/api/features/bill/updateBill";
+import { nestedJsonParseToDate } from "@/helpers";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 type Data = {
@@ -20,7 +21,7 @@ export default async function handler(
                 "createdAt",
                 "billDate",
             ]);
-            await createBill(newBill);
+            await createBill({...newBill, createdAt: new Date()});
             res.status(200).json({ success: true });
         } catch (error) {
             console.log(`${error.message} when creating bill`);
@@ -28,6 +29,7 @@ export default async function handler(
         }
     if (req.method === "GET") {
         const { id } = req.query;
+        
         let result = null;
         if (id) {
             result = await getBill(id as string);
@@ -35,6 +37,15 @@ export default async function handler(
             result = await listBill();
         }
         res.status(200).json({ success: true, data: result });
+    }
+
+    if(req.method === "PATCH") {
+        const billToUpdate = nestedJsonParseToDate(req.body, [
+            "createdAt",
+            "billDate",
+        ]);
+        const save = await updateBill(billToUpdate);
+        res.status(200).json({ success: true, data: save });
     }
 
     res.status(400).json({ error: "method not allowed" });

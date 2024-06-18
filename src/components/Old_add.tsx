@@ -2,10 +2,14 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import BottomNavigation from "@/components/bottomNavigation";
+import moment from "moment";
+import { useUser } from "@/hoc/UserProvider";
+import { useRouter } from "next/navigation";
 
 interface Expense {
     label: string;
     value: number;
+    paidBy: String;
 }
 
 const TextBillInput = (props) => {
@@ -17,26 +21,126 @@ const TextBillInput = (props) => {
     );
 };
 
-const AddBill = () => {
+const AddBill = ({ mode = "add", billToEdit = null }) => {
     const [expenses, setExpenses] = useState([]);
     const [showMore, setShowmore] = useState({
         value: "",
         show: false,
     });
+    const router = useRouter();
+    const { user } = useUser();
 
-    const handleCreateBill = async () => {
-        try {
-        } catch (error) {
-            console.error("Error storing bill data: ", error);
-        }
+    const handleUpdateBill = async () => {
+        const currentTime = new Date().toISOString();
+
+        console.log(user);
+
+        const updatedExpense = [];
+
+        expenses.forEach((expense) => {
+            const editExp = billToEdit.expenses.find(
+                (exp) =>
+                    exp.label === expense.label && exp.paidBy === user.userName
+            );
+
+            if (editExp) {
+                updatedExpense.push({
+                    ...editExp,
+                    amount: parseFloat(expense.value),
+                });
+            } else {
+                updatedExpense.push({
+                    label: expense.label,
+                    amount: parseFloat(expense.value),
+                    createdAt: currentTime,
+                    paidBy: user.userName,
+                });
+            }
+        });
+
+        const payload = {
+            ...billToEdit,
+            expenses: updatedExpense,
+        };
+
+        console.log(payload);
+
+        fetch("/api/bill/updateExpenses", {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+
+                return response.json();
+            })
+            .then((data) => {
+                router.push("/");
+                setExpenses([]);
+                console.log("Success:", data);
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
     };
 
+    const handleCreateBill = async () => {
+        const currentTime = new Date().toISOString();
+
+        console.log(user);
+
+        const payload = {
+            title: "bil4",
+            billDate: currentTime,
+            expenses: expenses.map((expense) => ({
+                label: expense.label,
+                amount: parseFloat(expense.value),
+                createdAt: currentTime,
+                paidBy: user.userName,
+            })),
+            status: "pending",
+            settlementDate: currentTime,
+            createdAt: currentTime,
+        };
+        fetch("/api/bill", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                setExpenses([]);
+                console.log("Success:", data);
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
+    };
+
+    useEffect(() => {
+        if (mode === "edit") {
+            setExpenses(billToEdit.expenses || []);
+        }
+    }, [billToEdit, mode]);
+
     const defaultExpenses: Expense[] = [
-        { label: "Elife", value: 375 },
-        { label: "Electricity Bill", value: 600 },
-        { label: "Meow Fund", value: 250 },
-        { label: "Fatima", value: 600 },
-        { label: "Rent", value: 5250 },
+        { label: "Elife", value: 375, paidBy: user?.userName },
+        { label: "Electricity Bill", value: 600, paidBy: user?.userName },
+        { label: "Meow Fund", value: 250, paidBy: user?.userName },
+        { label: "Fatima", value: 600, paidBy: user?.userName },
+        { label: "Rent", value: 5250, paidBy: user?.userName },
     ];
 
     function filterArray(array1: any[], array2: any[]) {
@@ -45,7 +149,7 @@ const AddBill = () => {
                 !array2.some(
                     (item2: { label: string; defaultValue: number }) =>
                         item1.label === item2.label &&
-                        item1.defaultValue === item2.defaultValue
+                        item1.defaultValue === item2.defaultValue 
                 )
         );
     }
@@ -104,10 +208,10 @@ const AddBill = () => {
         <>
             <div className="header container mx-auto px-6 py-4 gap-2 ">
                 <div className="flex w-full justify-between px-2">
-                    <h1>Add bill</h1>
+                    <h1>Add to bill</h1>
                     <div className="flex">
                         <div className="decoration-white underline mr-2">
-                            set date
+                            {moment().format("MMM DD, YYYY")}
                         </div>
                         <Image
                             src="/icons/calendar.svg"
@@ -138,10 +242,20 @@ const AddBill = () => {
                     </p>
                 )}
                 {showMore.show && (
-                    <div className="flex items-center gap-4">
+                    <form
+                        className="flex items-center gap-4"
+                        onSubmit={() =>
+                            handleAddExpense({
+                                label: showMore.value,
+                                value: 0,
+                                paidBy: user.userName,
+                            })
+                        }
+                    >
                         <div className="w-full">
                             <input
                                 type="text"
+                                required
                                 className="input"
                                 style={{ margin: 0 }}
                                 value={showMore.value}
@@ -161,12 +275,7 @@ const AddBill = () => {
                                 transition: "0.4s all ease",
                                 width: "100px",
                             }}
-                            onClick={() =>
-                                handleAddExpense({
-                                    label: showMore.value,
-                                    value: 0,
-                                })
-                            }
+                            type="submit"
                         >
                             Add
                         </button>
@@ -178,31 +287,41 @@ const AddBill = () => {
                             height={30}
                             onClick={() => HandleRemoveMore()}
                         />
-                    </div>
+                    </form>
                 )}
                 <div className="bg-white h-[1px] w-full my-4" />
             </div>
 
             <div className="container mx-auto px-6 py-4">
                 <div className="grid grid-cols-1 gap-x-4">
-                    {expenses.map((expense, index) => (
-                        <div key={index} className="flex items-center gap-4">
-                            <TextBillInput
-                                className="input"
-                                value={expense.value}
-                                onChange={(e) => handleChangeExpense(e, index)}
-                                placeholder={expense.label}
-                            />
-                            <Image
-                                src="/icons/trash.svg"
-                                alt="bin"
-                                className="pt-4"
-                                width={30}
-                                height={30}
-                                onClick={() => removeItem(expense.label)}
-                            />
-                        </div>
-                    ))}
+                    {expenses.map((expense, index) => {
+                        if (expense.paidBy !== user.userName) {
+                            return;
+                        }
+                        return (
+                            <div
+                                key={index}
+                                className="flex items-center gap-2 justify-center"
+                            >
+                                <TextBillInput
+                                    className="input"
+                                    value={expense.value}
+                                    onChange={(e) =>
+                                        handleChangeExpense(e, index)
+                                    }
+                                    placeholder={expense.label}
+                                />
+                                <Image
+                                    src="/icons/trash.svg"
+                                    alt="bin"
+                                    className="mt-4 p-1 w-12 aspect-square cursor-pointer hover:bg-[#ffffff11] rounded-lg"
+                                    width={30}
+                                    height={30}
+                                    onClick={() => removeItem(expense.label)}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
                 <div className="text-center pt-8">
                     <div className="totalAmount">
@@ -217,7 +336,11 @@ const AddBill = () => {
                     <div className="createBillButton">
                         <button
                             disabled={expenses.length === 0}
-                            onClick={handleCreateBill}
+                            onClick={() =>
+                                mode === "edit"
+                                    ? handleUpdateBill()
+                                    : handleCreateBill()
+                            }
                             style={{
                                 backgroundColor:
                                     expenses.length === 0 ? "gray" : "#39ace7",
@@ -225,7 +348,7 @@ const AddBill = () => {
                                 transition: "0.4s all ease",
                             }}
                         >
-                            Add bill
+                            {mode === "edit" ? "Update to bill" : "Add to bill"}
                         </button>
                     </div>
                 </div>

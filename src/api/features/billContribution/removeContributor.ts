@@ -5,6 +5,8 @@ export default async function removeContributor(
     userId: string,
     billId: string
 ) {
+    throw new Error("function to be implemented /  reworked");
+
     const client = await clientPromise;
     const dbContext = client.db(process.env.DB_NAME);
 
