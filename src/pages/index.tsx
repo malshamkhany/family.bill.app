@@ -91,7 +91,7 @@ export default function Home({ billId }: { billId?: string }) {
         response.json().then(({ data, success }) => {
           setBillContribution(data);
         });
-      });
+      }).catch(e => console.log(e));
     }
   }, [bill]);
 
