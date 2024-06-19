@@ -37,7 +37,10 @@ jobs:
         id: upload-artifact
         uses: actions/upload-artifact@v4
         with:
-          path: ./out
+          name: ${{ inputs.name }}
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: ${{ inputs.retention-days }}
+          if-no-files-found: error
 
   deploy:
     environment:
