@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.name }}
-          path: ${{ runner.temp }}/artifact.tar
+          path: ${{ runner.temp }}/out
           retention-days: ${{ inputs.retention-days }}
           if-no-files-found: error
 
