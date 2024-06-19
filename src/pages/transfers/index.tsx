@@ -22,10 +22,6 @@ export default function Transfers() {
     });
   }, []);
 
-  if (!data) {
-    return <Loader />;
-  }
-
   const handleSelectBill = (id: string) => {
     router.push(`/transfers/${id}`, { scroll: false });
   };
@@ -45,7 +41,11 @@ export default function Transfers() {
 
         <div className="px-2 h-[65vh] overflow-scroll mt-10">
           <div className="capitalize text-center mb-2">Select a Bill</div>
-          <BillListComponent data={data} OnItemSelect={handleSelectBill} />
+          {!data?.length ? (
+            <Loader />
+          ) : (
+            <BillListComponent data={data} OnItemSelect={handleSelectBill} />
+          )}
         </div>
       </div>
       <BottomNavigation />

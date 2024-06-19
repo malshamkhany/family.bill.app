@@ -7,6 +7,7 @@ import Accordion from "@/components/Accordion";
 import HistoryTabs from "@/components/HistoryTabs";
 import dynamic from "next/dynamic";
 import DotStatus from "@/components/DotStatus";
+import Loader from "@/components/Loader";
 
 const BillGraph = dynamic(() => import("@/components/BillGraph"), {
   ssr: false,
@@ -89,6 +90,29 @@ const HistoryList = () => {
   //     x: date.toDate().getTime(),
   //   });
   // }
+
+  if (!history?.length) {
+    return (
+      <>
+        <div className="header container mx-auto px-6 py-4 gap-2 mb-1 z-[1000]">
+          <Image src="/icons/calendar.svg" alt="home" width={25} height={25} />
+          <h1>History</h1>
+        </div>
+
+        <div className="container mx-auto px-6 py-4 mb-24">
+          <div className="mx-auto w-fit mb-4">
+            <HistoryTabs
+              selected={selectedView}
+              onTabChange={(tab) => setSelectedView(tab)}
+            />
+          </div>
+
+          <Loader />
+        </div>
+        <BottomNavigation />
+      </>
+    );
+  }
 
   return (
     <>
