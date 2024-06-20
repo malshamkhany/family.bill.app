@@ -31,12 +31,12 @@ jobs:
       - name: Build with Next.js 🏗️
         run: npx next build
 
-      - name: Upload artifact 📡
-        id: upload-artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          name: 'github-pages'
-          path: ./out
+      # - name: Upload artifact 📡
+      #   id: upload-artifact
+      #   uses: actions/upload-pages-artifact@v3
+      #   with:
+      #     name: 'github-pages'
+      #     path: ./out
 
   deploy:
     environment:
@@ -46,7 +46,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
 
-    steps:
+    # steps:
+    #   - name: Publish to GitHub Pages 🚀
+    #     id: deployment
+    #     uses: actions/deploy-pages@v4
+    # steps:
       - name: Publish to GitHub Pages 🚀
         id: deployment
-        uses: actions/deploy-pages@v4
+        run: node .next/standalone/server.js

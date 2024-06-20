@@ -1,0 +1,14 @@
+version: "3"
+services:
+  nextjs:
+    build:
+      context: .  
+    restart: always
+    ports:
+      - "3000:3000"
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
