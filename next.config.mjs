@@ -4,8 +4,7 @@ const nextConfig = {
   output: "export",
   basePath: "/family.bill.app",
   images: {
-    loader: "akamai",
-    path: "",
+    unoptimized: true,
   },
 };
 
