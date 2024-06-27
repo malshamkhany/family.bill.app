@@ -30,6 +30,15 @@ jobs:
 
       - name: Build with Next.js 🏗️
         run: npx next build
+        env:
+          NEXT_PUBLIC_DATABASE_API_KEY: ${{ secrets.NEXT_PUBLIC_DATABASE_API_KEY }}
+          NEXT_PUBLIC_DATABASE_NAME: ${{ secrets.NEXT_PUBLIC_DATABASE_NAME }}
+          NEXT_PUBLIC_DATABASE_ID: ${{ secrets.NEXT_PUBLIC_DATABASE_ID }}
+          NEXT_PUBLIC_DATABASE_SERVICE_NAME: ${{ secrets.NEXT_PUBLIC_DATABASE_SERVICE_NAME }}
+          NEXT_PUBLIC_DATABASE_BILL_COLLECTION: ${{ secrets.NEXT_PUBLIC_DATABASE_BILL_COLLECTION }}
+          NEXT_PUBLIC_DATABASE_BILL_CONTRIBUTION_COLLECTION: ${{ secrets.NEXT_PUBLIC_DATABASE_BILL_CONTRIBUTION_COLLECTION }}
+          NEXT_PUBLIC_USER_PASSWORD: ${{ secrets.NEXT_PUBLIC_USER_PASSWORD }}
+          NEXT_PUBLIC_JWT_SECRET: ${{ secrets.NEXT_PUBLIC_JWT_SECRET }}
 
       - name: Upload artifact 📡
         id: upload-artifact
