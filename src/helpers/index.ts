@@ -1,4 +1,4 @@
-import { Bill } from "@/api/models/bill";
+import { bill } from "@/db/models/bill";
 
 export function nestedJsonParseToDate(jsonObj: any, keys: string[]): any {
   function traverse(obj: any) {
@@ -41,7 +41,7 @@ export function getAmountTrasferredTo(transfers, toId) {
   return transfer ? transfer.amount : 0;
 }
 
-export const getSettlements = (bill: Bill) => {
+export const getSettlements = (bill: bill) => {
   // Define participants and their total payments
   // Define the number of participants
   const participants = {};
