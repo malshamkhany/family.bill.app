@@ -5,9 +5,12 @@ import { useUser } from "@/hoc/UserProvider";
 import { useSnackNotification } from "@/hoc/SnackNotificationProvider";
 import Image from "next/image";
 import ButtonLoader from "@/components/ButtonLoader";
+import { useDb } from "@/hoc/DbProvider";
+import withAuth from "@/hoc/withAuth";
 
 const Login = () => {
   const router = useRouter();
+  const db = useDb();
   const [loading, setLoading] = useState(false);
   const { open } = useSnackNotification();
 
@@ -15,43 +18,30 @@ const Login = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true)
+    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const username = formData.get("username");
+    const username = formData.get("username")?.toString();
     const password = formData.get("password");
 
     try {
-      const response = await fetch(
-        `/api/user/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ userName: username, password }),
-        }
-      );
+      const user = await db.userCollection.getUserByUserName(username);
 
-      if (response.ok) {
-        // Handle successful authentication
-        console.log("Login successful!");
-        const data = await response.json();
-        onLogin(data.user);
-        open("Login successful", "success");
-        router.push("/", { scroll: false });
-      } else {
-        // Handle authentication failure
-        const data = await response.json();
-        open(`Login failed - ${data.error}`, "error");
-        console.error(`Login failed - ${data.error}`);
+      if (!user?._id || password !== process.env.NEXT_PUBLIC_USER_PASSWORD) {
+        open("Wrong username or password", "error");
+        setLoading(false);
+        return;
       }
+
+      onLogin({ _id: user._id.toString(), userName: user.userName });
+      open("Login successful", "success");
+      router.push("/", { scroll: false });
     } catch (error) {
       open("Login failed", "error");
       console.error("An error occurred while logging in:", error);
     }
 
-    setLoading(false)
+    setLoading(false);
   };
 
   return (
@@ -104,4 +94,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default withAuth(Login);

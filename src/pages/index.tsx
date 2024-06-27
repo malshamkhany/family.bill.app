@@ -1,15 +1,17 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Bill } from "@/api/models/bill";
 import BottomNavigation from "@/components/bottomNavigation";
 import moment from "moment";
 import { useSnackNotification } from "@/hoc/SnackNotificationProvider";
 import Loader from "@/components/Loader";
 import { getSettlements } from "@/helpers";
-import { BillContribution } from "@/api/models/billContribution";
 import DotStatus from "@/components/DotStatus";
 import ButtonLoader from "@/components/ButtonLoader";
+import { bill } from "@/db/models/bill";
+import { billcontribution } from "@/db/models/billContribution";
+import withAuth from "@/hoc/withAuth";
+import { useDb } from "@/hoc/DbProvider";
 
 // type ConnectionStatus = {
 //   isConnected: boolean;
@@ -24,13 +26,14 @@ import ButtonLoader from "@/components/ButtonLoader";
 //   };
 // };
 
-export default function Home({ billId }: { billId?: string }) {
+function Home({ billId }: { billId?: string }) {
   // {
   //   isConnected,
   // }: InferGetServerSidePropsType<typeof getServerSideProps>
-  const [bill, setBill] = useState<Bill>(null);
+  const db = useDb();
+  const [bill, setBill] = useState<bill>(null);
   const [notFound, setNotFound] = useState(false);
-  const [billContribution, setBillContribution] = useState<BillContribution[]>(
+  const [billContribution, setBillContribution] = useState<billcontribution[]>(
     []
   );
   const { open } = useSnackNotification();
@@ -58,42 +61,53 @@ export default function Home({ billId }: { billId?: string }) {
 
   useEffect(() => {
     if (billId) {
-      fetch(`/api/bill?id=${billId}`).then((response) => {
-        response.json().then(({ data, success }) => {
+      db.billCollection
+        .getBillById(billId)
+        .then((data) => {
           if (!data) {
             setNotFound(true);
           }
           setBill(data);
+        })
+        .catch(() => {
+          setNotFound(true);
+          open("Something went wrong.", "error");
         });
-      });
     } else {
-      fetch("/api/bill/current").then((response) => {
-        response.json().then(({ data, success }) => {
+      db.billCollection
+        .getCurrentBill()
+        .then((data) => {
           if (!data) {
             setNotFound(true);
           }
           setBill(data);
+        })
+        .catch(() => {
+          setNotFound(true);
+          open("Something went wrong.", "error");
         });
-      });
     }
-  }, [billId]);
+  }, [billId, db, open]);
 
   useEffect(() => {
-    if (bill?.contributors) {
-      const ids = bill.contributors.map((c) => c.billContributionId);
-      fetch("/api/billContributor/many", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(ids),
-      }).then((response) => {
-        response.json().then(({ data, success }) => {
-          setBillContribution(data);
-        });
-      }).catch(e => console.log(e));
-    }
-  }, [bill]);
+    const populateCB = async () => {
+      if (bill?.contributors) {
+        const storeCB = [];
+
+        for (const cb of bill.contributors) {
+          const fetchedCb =
+            await db.billContributionCollection.getContributionBillById(
+              cb.billContributionId
+            );
+          if (fetchedCb) storeCB.push(fetchedCb);
+        }
+
+        setBillContribution(storeCB);
+      }
+    };
+
+    populateCB();
+  }, [bill, db.billContributionCollection]);
 
   if (notFound) {
     return (
@@ -139,7 +153,8 @@ export default function Home({ billId }: { billId?: string }) {
       ...bill,
       status: bill.status === "pending" ? "settled" : "pending",
     };
-    updateBill(billToUpdate)
+    db.billCollection
+      .updateBill({ _id: billToUpdate._id }, { $set: { ...billToUpdate } })
       .then(() => {
         open(
           bill.status === "pending"
@@ -244,7 +259,7 @@ export default function Home({ billId }: { billId?: string }) {
         <div className="amountDueContainer">
           <div className="expenseItem">
             <span className="expenseTitle">Total</span>
-            <span className="expenseAmount">{bill.totalAmount}</span>
+            <span className="expenseAmount">{bill.totalAmount.toFixed(2)}</span>
           </div>
           <div className="expenseItem">
             <span className="expenseTitle">
@@ -321,7 +336,7 @@ export default function Home({ billId }: { billId?: string }) {
                       width={25}
                       height={25}
                     />
-                    <CashBubble>{Math.round(t.amount * 100) / 100}</CashBubble>
+                    <CashBubble>{Math.round(t.amount as number * 100) / 100}</CashBubble>
                     <p className="text-xs font-[Lakes-Bold] my-1">
                       -- Transfer date: {moment(t.transferDate).format("lll")}
                     </p>
@@ -410,3 +425,5 @@ const updateBill = async (bill: any) => {
 
   return null;
 };
+
+export default withAuth(Home);

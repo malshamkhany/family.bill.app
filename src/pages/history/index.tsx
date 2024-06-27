@@ -8,12 +8,15 @@ import HistoryTabs from "@/components/HistoryTabs";
 import dynamic from "next/dynamic";
 import DotStatus from "@/components/DotStatus";
 import Loader from "@/components/Loader";
+import { useDb } from "@/hoc/DbProvider";
+import withAuth from "@/hoc/withAuth";
 
 const BillGraph = dynamic(() => import("@/components/BillGraph"), {
   ssr: false,
 });
 
 const HistoryList = () => {
+  const db = useDb();
   const [history, setHistory] = useState([]);
   const [isOpen, setIsOpen] = useState<String>("");
   const [selectedView, setSelectedView] = useState<"list" | "graph">("list");
@@ -27,12 +30,13 @@ const HistoryList = () => {
   };
 
   useEffect(() => {
-    fetch("/api/bill").then((response) => {
-      response.json().then(({ data, success }) => {
-        setHistory(data);
+    db.billCollection
+      .readBills({}, { sort: { billDate: -1 } })
+      .then((data) => setHistory(data))
+      .catch(() => {
+        open("Something went wrong.", "error");
       });
-    });
-  }, []);
+  }, [db.billCollection]);
 
   const getExpensesGroup = (expenses) => {
     const groupedExpenses = expenses.reduce((acc, expense) => {
@@ -243,157 +247,4 @@ const HistoryList = () => {
   );
 };
 
-export default HistoryList;
-
-// const data = [
-//   {
-//     label: "Jun 1, 2022",
-//     y: 9833,
-//     x: 1654027200000,
-//   },
-//   {
-//     label: "Jul 1, 2022",
-//     y: 11066,
-//     x: 1656619200000,
-//   },
-//   {
-//     label: "Aug 1, 2022",
-//     y: 12235,
-//     x: 1659297600000,
-//   },
-//   {
-//     label: "Sep 1, 2022",
-//     y: 12806,
-//     x: 1661976000000,
-//   },
-//   {
-//     label: "Oct 1, 2022",
-//     y: 8478,
-//     x: 1664568000000,
-//   },
-//   {
-//     label: "Nov 1, 2022",
-//     y: 11603,
-//     x: 1667246400000,
-//   },
-//   {
-//     label: "Dec 1, 2022",
-//     y: 8002,
-//     x: 1669838400000,
-//   },
-//   {
-//     label: "Jan 1, 2023",
-//     y: 7214,
-//     x: 1672516800000,
-//   },
-//   {
-//     label: "Feb 1, 2023",
-//     y: 11509,
-//     x: 1675195200000,
-//   },
-//   {
-//     label: "Mar 1, 2023",
-//     y: 9032,
-//     x: 1677614400000,
-//   },
-//   {
-//     label: "Apr 1, 2023",
-//     y: 5267,
-//     x: 1680292800000,
-//   },
-//   {
-//     label: "May 1, 2023",
-//     y: 11229,
-//     x: 1682884800000,
-//   },
-//   {
-//     label: "Jun 1, 2023",
-//     y: 6673,
-//     x: 1685563200000,
-//   },
-//   {
-//     label: "Jul 1, 2023",
-//     y: 12633,
-//     x: 1688155200000,
-//   },
-//   {
-//     label: "Aug 1, 2023",
-//     y: 10921,
-//     x: 1690833600000,
-//   },
-//   {
-//     label: "Sep 1, 2023",
-//     y: 5933,
-//     x: 1693512000000,
-//   },
-//   {
-//     label: "Oct 1, 2023",
-//     y: 12105,
-//     x: 1696104000000,
-//   },
-//   {
-//     label: "Nov 1, 2023",
-//     y: 7943,
-//     x: 1698782400000,
-//   },
-//   {
-//     label: "Dec 1, 2023",
-//     y: 8172,
-//     x: 1701374400000,
-//   },
-//   {
-//     label: "Jan 1, 2024",
-//     y: 9959,
-//     x: 1704052800000,
-//   },
-//   {
-//     label: "Feb 1, 2024",
-//     y: 11639,
-//     x: 1706731200000,
-//   },
-//   {
-//     label: "Mar 1, 2024",
-//     y: 5475,
-//     x: 1709236800000,
-//   },
-//   {
-//     label: "Mar 1, 2024",
-//     y: 3475,
-//     x: 1709236800000,
-//   },
-//   {
-//     label: "Apr 1, 2024",
-//     y: 11760,
-//     x: 1711915200000,
-//   },
-//   {
-//     label: "May 1, 2024",
-//     y: 10240,
-//     x: 1714507200000,
-//   },
-//   {
-//     label: "Jun 1, 2024",
-//     y: 9839,
-//     x: 1717185600000,
-//   },
-//   {
-//     label: "Jun 1, 2024",
-//     y: 1839,
-//     x: 1717185600000,
-//   },
-// ];
-
-// const dataNormalizedSet = new Map<number, (typeof data)[0]>();
-// data.forEach((d) => {
-//   const key = moment(new Date(d.x))
-//     .startOf("month")
-//     .startOf("day")
-//     .toDate()
-//     .getTime();
-//   if (dataNormalizedSet.has(key)) {
-//     const pre = dataNormalizedSet.get(key);
-//     dataNormalizedSet.set(key, { ...pre, y: pre.y + d.y });
-//   } else {
-//     dataNormalizedSet.set(key, d);
-//   }
-// });
+export default withAuth(HistoryList);

@@ -1,10 +1,13 @@
 import ButtonLoader from "@/components/ButtonLoader";
 import Loader from "@/components/Loader";
 import BottomNavigation from "@/components/bottomNavigation";
+import MongoDbContext from "@/db/mongodb";
+import { useDb } from "@/hoc/DbProvider";
 import { useSnackNotification } from "@/hoc/SnackNotificationProvider";
 import { useUser } from "@/hoc/UserProvider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
+import { BSON } from "realm-web";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -13,6 +16,7 @@ import { z } from "zod";
 
 const BillPage = () => {
   const router = useRouter();
+  const db = useDb();
   const routeParams = router.query;
 
   const { user } = useUser();
@@ -50,7 +54,8 @@ const BillPage = () => {
         setBillState(newBill);
         setLoading(false);
       } else {
-        fetchBill(billId as string)
+        db.billCollection
+          .getBillById(billId as string)
           .then((data) => {
             setBillState(data);
             setLoading(false);
@@ -62,7 +67,7 @@ const BillPage = () => {
     }
 
     if (routeParams.billId) updateBillState();
-  }, [open, routeParams]);
+  }, [open, routeParams, db.billCollection]);
 
   useEffect(() => {
     if (!billState) {
@@ -121,7 +126,7 @@ const BillPage = () => {
 
   function handleCreateBill(): void {
     setUpdating(true);
-    postBill(getValues())
+    postBill(getValues(), db)
       .then(() => {
         open("Bill created.", "success");
         router.push("/");
@@ -135,8 +140,15 @@ const BillPage = () => {
 
   function handleUpdateBill(): void {
     setUpdating(true);
-    const billToUpdate = getValues();
-    updateBill(billToUpdate)
+    const billToUpdate: any = {
+      ...getValues(),
+      lastUpdated: new Date(),
+      totalAmount: sumOfValues,
+    };
+    console.log("before", billToUpdate);
+
+    db.billCollection
+      .updateBill({ _id: billToUpdate._id }, { $set: { ...billToUpdate } })
       .then(() => {
         open("Bill updated.", "success");
         reset(billToUpdate);
@@ -313,7 +325,7 @@ const BillPage = () => {
                 onChange={(e) => {
                   const date = moment(e.target.value, "YYYY-MM-DD", true);
                   if (date.isValid()) {
-                    onChange(date.toISOString());
+                    onChange(date.toDate());
                   }
                 }}
                 className="w-full p-2 border border-gray-300 text-black rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -342,7 +354,7 @@ const BillPage = () => {
                   : handleUpdateBill()
               }
               style={{
-                filter: `grayscale(${!updating ? "1" : "0"})`,
+                filter: `grayscale(${updating || isDisabled ? "1" : "0"})`,
                 color: "#fff",
                 transition: "0.4s all ease",
               }}
@@ -383,13 +395,13 @@ const pillButton = (label: string) => {
 
 const BillSchema = z.object({
   title: z.string(),
-  billDate: z.string(),
+  billDate: z.date(),
   expenses: z.array(
     z.object({
       label: z.string(),
       amount: z.number().positive(),
       paidBy: z.string().nullable().optional(),
-      createdAt: z.string(),
+      createdAt: z.date(),
     })
   ),
   status: z.string(),
@@ -399,7 +411,7 @@ const BillSchema = z.object({
 export type Bill = z.infer<typeof BillSchema>;
 
 const newBill: Bill = {
-  billDate: new Date().toISOString(),
+  billDate: new Date(),
   expenses: [],
   status: "pending",
   title: "bill",
@@ -408,47 +420,61 @@ const newBill: Bill = {
 const newExpense = (label: string, paidBy: string, amount = 0) => {
   return {
     amount,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
     label,
     paidBy,
   };
 };
 
-const fetchBill = async (id: string) => {
-  const response = await fetch(`/api/bill?id=${id}`);
-  const result = await response.json();
+const postBill = async (bill: any, db: MongoDbContext) => {
+  let totalAmount = 0;
+  bill.expenses.forEach((a) => (totalAmount += a.amount));
+  bill.totalAmount = totalAmount;
 
-  if (result.success) return result.data;
+  // correct schema
+  bill.createdAt = new Date();
+  bill.lastUpdated = new Date();
+  bill._id = new BSON.ObjectId();
+  bill.contributors = [];
 
-  return null;
-};
+  let result = await db.billCollection.createBill(bill);
 
-const postBill = async (bill: any) => {
-  const response = await fetch("/api/bill", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(bill),
-  });
-  const result = await response.json();
+  // auto-add all contributors.
+  // TODO: in future, have to user add contributors via api requests
+  const users = await db.userCollection.readUsers();
+  let contributorList = [];
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+    const billContribution = {
+      _id: new BSON.ObjectId(),
+      billId: result.insertedId.toString(),
+      transfers: [],
+      userId: user._id.toString(),
+      userName: user.userName,
+    };
+    const created = await db.billContributionCollection.createContributionBill(
+      billContribution
+    );
+    if (created.insertedId) {
+      contributorList = [
+        ...contributorList,
+        {
+          billContributionId: created.insertedId.toString(),
+          userId: billContribution.userId,
+          userName: billContribution.userName,
+        },
+      ];
+    } else console.log("failed to create contributor");
+  }
 
-  if (result.success) return result.data;
+  if (contributorList.length > 0) {
+    await db.billCollection.updateBill(
+      { _id: result.insertedId },
+      { $set: { contributors: contributorList, lastUpdated: new Date() } }
+    );
+  }
 
-  return null;
-};
-
-const updateBill = async (bill: any) => {
-  const response = await fetch("/api/bill", {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(bill),
-  });
-  const result = await response.json();
-
-  if (result.success) return result.data;
+  if (result) return result;
 
   return null;
 };

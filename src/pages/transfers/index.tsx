@@ -1,26 +1,26 @@
 import DotStatus from "@/components/DotStatus";
 import Loader from "@/components/Loader";
 import BottomNavigation from "@/components/bottomNavigation";
+import { useDb } from "@/hoc/DbProvider";
+import withAuth from "@/hoc/withAuth";
 import moment from "moment";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function Transfers() {
+function Transfers() {
   const router = useRouter();
+  const db = useDb()
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch("/api/bill", {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then((response) => {
-      response.json().then(({ data, success }) => {
-        setData(data);
+    db.billCollection
+      .readBills({}, { sort: { createdAt: -1 } })
+      .then((data) => setData(data))
+      .catch(() => {
+        open("Something went wrong.", "error");
       });
-    });
-  }, []);
+  }, [db.billCollection]);
 
   const handleSelectBill = (id: string) => {
     router.push(`/transfers/${id}`, { scroll: false });
@@ -99,3 +99,6 @@ const BillListComponent = ({ data, OnItemSelect }) => {
     </ul>
   );
 };
+
+
+export default withAuth(Transfers);

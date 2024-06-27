@@ -7,6 +7,7 @@ import React, {
     ReactNode,
     useEffect,
 } from "react";
+import * as jose from "jose";
 
 interface User {
     _id: string;
@@ -15,7 +16,7 @@ interface User {
 
 interface UserContextType {
     user: User | null;
-    onLogin: (userData: { userName: string; _id: string }) => void;
+    onLogin: (userData: User) => Promise<void>;
     onLogout: () => void;
 }
 
@@ -26,11 +27,19 @@ const UserProvider: React.FC<{
 }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
 
-    const onLogin = (userData: { userName: string; _id: string }) => {
-        const { _id, userName } = userData;
-        const user = { _id, userName };
-        setUser(user);
-        localStorage.setItem("user", JSON.stringify(user));
+    const onLogin = async (userData: User) => {
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        const jwtToken = await new jose.SignJWT({
+            userId: userData._id,
+            userName: userData.userName,
+        })
+            .setProtectedHeader({ alg: "HS256" })
+            .setIssuedAt()
+            .sign(new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET));
+        
+        localStorage.setItem("session-token", jwtToken)
     };
 
     const onLogout = () => {
