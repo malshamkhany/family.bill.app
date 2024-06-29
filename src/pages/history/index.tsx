@@ -17,7 +17,7 @@ const BillGraph = dynamic(() => import("@/components/BillGraph"), {
 
 const HistoryList = () => {
   const db = useDb();
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState([])
 
   const [selectedView, setSelectedView] = useState<"list" | "graph">("list");
 
@@ -52,6 +52,8 @@ const HistoryList = () => {
     label: string;
     y: number;
     x: number;
+    settled: boolean;
+    color: string
   };
 
   const normalizedDataset = new Map<number, GraphData>();
@@ -71,6 +73,8 @@ const HistoryList = () => {
         label: normalDate.format("ll"),
         x: key,
         y: d.totalAmount,
+        settled: d.status === "settled",
+        color: d.status === "settled" ? "#0784b5" : "#eab308"
       });
     }
   });

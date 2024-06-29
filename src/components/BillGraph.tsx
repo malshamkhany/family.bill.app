@@ -8,6 +8,8 @@ interface Data {
   label: string;
   y: number;
   x: number;
+  settled: boolean;
+  color: string;
 }
 const zoomBtns = [
   { key: "6months", label: "6 Months", value: 6 },
@@ -20,6 +22,7 @@ const BillGraph = ({ data }: { data: Data[] }) => {
   const chartRef = useRef(null); // Step 1: Create a ref for the chart
   const [zoomView, setZoomView] = useState(zoomBtns[0]);
   const maxYvalue = getMaxYValue(data);
+  const avgYvalue = getAvgYValue(data.filter(f => f.settled).slice(-4)); // Calculate the average value
 
   const options = {
     // colorSet: "customColorSet1",
@@ -74,9 +77,17 @@ const BillGraph = ({ data }: { data: Data[] }) => {
         indexLabelPlacement: "outside",
         indexLabelOrientation: "horizontal",
         type: "column",
-        color: "#0784b5",
+        // color: "#0784b5",
         dataPoints: data,
       },
+      {
+        type: "line",
+        dataPoints: data.filter(d => d.settled).slice(-4).map(point => ({ x: point.x, y: avgYvalue })), // Create a horizontal line at the average value
+        color: "#00FF00", // Red color for the average line
+        lineDashType: "shortDash",
+        showInLegend: true,
+        legendText: "Past 4 Months Average",
+      }
     ],
   };
 
@@ -137,6 +148,12 @@ const BillGraph = ({ data }: { data: Data[] }) => {
 function getMaxYValue(data: Data[]) {
   return data.reduce((max, item) => (item.y > max ? item.y : max), -Infinity);
 }
+
+function getAvgYValue(data: Data[]) {
+  const sum = data.reduce((total, item) => total + item.y, 0);
+  return Math.round(sum / data.length);
+}
+
 
 function monthOffsetTime(date: number, mode: "minus" | "plus") {
   const dateToOffset = moment(new Date(date));
