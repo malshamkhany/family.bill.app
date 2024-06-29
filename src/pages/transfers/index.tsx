@@ -36,11 +36,11 @@ function Transfers() {
             width={25}
             height={25}
           />
-          <h1>Transfers</h1>
+          <h1>Transfers</h1>                            
         </div>
 
-        <div className="px-2 h-[65vh] overflow-scroll mt-10">
-          <div className="capitalize text-center mb-2">Select a Bill</div>
+        <div className="px-2 h-[65vh] overflow-scroll">
+          <div className="capitalize text-center mb-2 mt-10">Select a Bill</div>
           {!data?.length ? (
             <Loader />
           ) : (

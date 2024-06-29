@@ -288,7 +288,7 @@ function Home({ billId }: { billId?: string }) {
           <p className="pb-3 font-[Lakes-Bold]">Calculated Payout:</p>
           {calculatedPayouts.settlements.map((m, i) => (
             <div
-              className="flex gap-3 items-center justify-start flex-wrap mb-3"
+              className="flex gap-1 items-center justify-start flex-wrap mb-3"
               key={`${m.debtor}_${i}`}
             >
               <ContributorBubble>{m.debtor}</ContributorBubble>
@@ -317,7 +317,7 @@ function Home({ billId }: { billId?: string }) {
                 {m.transfers.map((t, i) => (
                   <div
                     key={`${m.userId}_${i}`}
-                    className="flex gap-x-3 items-center justify-start flex-wrap mb-3"
+                    className="flex gap-x-1 items-center justify-start flex-wrap mb-3"
                   >
                     <ContributorBubble>
                       {bill.contributors.find((u) => u.userId === t.from)
@@ -392,7 +392,7 @@ function Home({ billId }: { billId?: string }) {
 const ContributorBubble = ({ children, ...rest }) => {
   return (
     <div
-      className="bg-purple-800 font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
+      className="bg-purple-800 text-sm font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
       {...rest}
     >
       {children}
@@ -403,7 +403,7 @@ const ContributorBubble = ({ children, ...rest }) => {
 const CashBubble = ({ children, ...rest }) => {
   return (
     <div
-      className="bg-green-600 font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
+      className="bg-green-600 text-sm font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
       {...rest}
     >
       {children}
@@ -411,19 +411,5 @@ const CashBubble = ({ children, ...rest }) => {
   );
 };
 
-const updateBill = async (bill: any) => {
-  const response = await fetch("/api/bill", {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(bill),
-  });
-  const result = await response.json();
-
-  if (result.success) return result.data;
-
-  return null;
-};
 
 export default withAuth(Home);

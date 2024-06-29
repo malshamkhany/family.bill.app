@@ -1,20 +1,23 @@
-// import SnackNotification from "@/components/SnackNotification";
-import { useRouter } from "next/navigation";
-import React, { FormEvent, useState } from "react";
+import { useRouter } from "next/router";
+import React, { FormEvent, useEffect, useState } from "react";
 import { useUser } from "@/hoc/UserProvider";
 import { useSnackNotification } from "@/hoc/SnackNotificationProvider";
 import Image from "next/image";
 import ButtonLoader from "@/components/ButtonLoader";
 import { useDb } from "@/hoc/DbProvider";
 import withAuth from "@/hoc/withAuth";
+import Loader from "@/components/Loader";
 
 const Login = () => {
   const router = useRouter();
   const db = useDb();
   const [loading, setLoading] = useState(false);
   const { open } = useSnackNotification();
-
   const { onLogin } = useUser();
+
+  useEffect(() => {
+    router.prefetch("/");
+  }, [router]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,31 +36,32 @@ const Login = () => {
         return;
       }
 
-      onLogin({ _id: user._id.toString(), userName: user.userName });
+      await onLogin({ _id: user._id.toString(), userName: user.userName });
+      router.push("/");
       open("Login successful", "success");
-      router.push("/", { scroll: false });
+      
     } catch (error) {
       open("Login failed", "error");
       console.error("An error occurred while logging in:", error);
+      setLoading(false); // Only set loading to false if there's an error
     }
-
-    setLoading(false);
   };
+
 
   return (
     <div className="flex flex-col items-center h-screen px-8 mt-[5vh]">
       <Image
         className="aspect-square object-cover rounded-[6rem] mb-8"
+        priority
         width={200}
         height={200}
         alt="soksok"
         src="/images/soksok.jpg"
       />
-
-      <div className="rounded-lg p-8 max-w-md w-full shadow-lg bg-[#414c50]">
+      <div className="rounded-lg px-8 py-6 max-w-md w-full shadow-lg bg-[#414c50]">
         <h2 className="text-2xl text-center font-semibold mb-4">Login</h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4 ">
+          <div className="mb-4">
             <label htmlFor="username" className="block mb-1">
               Username:
             </label>
@@ -76,7 +80,7 @@ const Login = () => {
               type="password"
               id="password"
               name="password"
-              className="w-full px-4 py-2 border  rounded-md focus:outline-none focus:border-blue-500 text-black"
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500 text-black"
             />
           </div>
           <button
@@ -88,10 +92,9 @@ const Login = () => {
             {loading ? <ButtonLoader className="h-6 scale-50" /> : "Enter"}
           </button>
         </form>
-        {/* <SnackNotification ref={snackRef} /> */}
       </div>
     </div>
   );
 };
 
-export default withAuth(Login);
+export default Login;

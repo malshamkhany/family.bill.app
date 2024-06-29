@@ -293,6 +293,7 @@ button {
 .item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 10px 20px;
   border: 1px solid #2d383c;
   border-radius: 18px;
@@ -300,7 +301,7 @@ button {
 }
 
 .date {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: bold;
   color: #fff;
   display: flex;

@@ -40,6 +40,7 @@ const BillPage = () => {
   });
 
   const watchedExpensed = watch("expenses");
+  const billDateState = watch("billDate");
 
   const [showMore, setShowmore] = useState({
     value: "",
@@ -160,6 +161,8 @@ const BillPage = () => {
       .finally(() => setUpdating(false));
   }
 
+  console.log(billDateState)
+
   return (
     <>
       <div className="header container mx-auto px-6 py-4 gap-2 ">
@@ -167,7 +170,9 @@ const BillPage = () => {
           <h1>{routeParams?.billId === "new" ? "Add" : "Edit"} bill</h1>
           <div className="flex">
             <div className="decoration-white underline mr-2">
-              {moment(billState.billDate).format("MMM DD, YYYY")}
+              {routeParams.billId === "new"
+                ? moment(billDateState).format("MMM DD, YYYY")
+                : moment(billState.billDate).format("MMM DD, YYYY")}
             </div>
             <Image
               src="/icons/calendar.svg"

@@ -18,16 +18,8 @@ const BillGraph = dynamic(() => import("@/components/BillGraph"), {
 const HistoryList = () => {
   const db = useDb();
   const [history, setHistory] = useState([]);
-  const [isOpen, setIsOpen] = useState<String>("");
-  const [selectedView, setSelectedView] = useState<"list" | "graph">("list");
 
-  const toggleAccordion = (_id) => {
-    if (_id === isOpen) {
-      setIsOpen("");
-      return;
-    }
-    setIsOpen(_id);
-  };
+  const [selectedView, setSelectedView] = useState<"list" | "graph">("list");
 
   useEffect(() => {
     db.billCollection
@@ -134,21 +126,13 @@ const HistoryList = () => {
         </div>
 
         {selectedView === "list" &&
-          history.reverse().map((item, index) => {
+          history.map((item, index) => {
             const payingExpenses = getExpensesGroup(item.expenses);
             return (
-              <div key={item.billDate} className="mb-5">
+              <div key={item._id} className="mb-5">
                 <Accordion
-                  isOpen={isOpen === item._id}
-                  toggleAccordion={() => toggleAccordion(item._id)}
                   header={
-                    <div
-                      className="item"
-                      style={{
-                        backgroundColor:
-                          isOpen === item._id ? "#0784b5" : "#414c50",
-                      }}
-                    >
+                    <>
                       <div className="date">
                         <div className="flex justify-center items-center">
                           <DotStatus status={item.status} />
@@ -161,8 +145,8 @@ const HistoryList = () => {
                         />{" "}
                         {moment(item.billDate).format("MMM DD, YYYY")}
                       </div>
-                      <div className="totalAmount">{item.totalAmount} AED</div>
-                    </div>
+                      <div className="totalAmount">{ Math.round(item.totalAmount)} AED</div>
+                    </>
                   }
                   content={
                     <div className="px-3">
