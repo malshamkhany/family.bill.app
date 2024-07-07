@@ -350,7 +350,7 @@ const BillPage = () => {
                       <CheckBox
                         checked={c.isSettled}
                         key="checkbox-settle"
-                        label={"No more expenses to add"}
+                        label={"I have no more expenses to add"}
                         onChange={(e) => {
                           let valToUpdate = [...value];
                           valToUpdate[idx].isSettled = e.target.checked;
