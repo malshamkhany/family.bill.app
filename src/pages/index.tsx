@@ -12,6 +12,7 @@ import { bill } from "@/db/models/bill";
 import { billcontribution } from "@/db/models/billContribution";
 import withAuth from "@/hoc/withAuth";
 import { useDb } from "@/hoc/DbProvider";
+import { useUser } from "@/hoc/UserProvider";
 
 // type ConnectionStatus = {
 //   isConnected: boolean;
@@ -31,6 +32,7 @@ function Home({ billId }: { billId?: string }) {
   //   isConnected,
   // }: InferGetServerSidePropsType<typeof getServerSideProps>
   const db = useDb();
+  const { user } = useUser();
   const [bill, setBill] = useState<bill>(null);
   const [notFound, setNotFound] = useState(false);
   const [billContribution, setBillContribution] = useState<billcontribution[]>(
@@ -177,6 +179,8 @@ function Home({ billId }: { billId?: string }) {
     billContribution.length !== 0 &&
     billContribution.find((m) => m.transfers.length > 0);
 
+  // const canSettleBill = bill.contributors.some(b => b.isSettled)
+
   return (
     <>
       <div className="header container mx-auto px-6 py-4 gap-2">
@@ -273,16 +277,30 @@ function Home({ billId }: { billId?: string }) {
           </div>
         </div>
         <p className="text-xs font-[Lakes-Bold] text-center my-2">
-          Last updated: {moment(bill.lastUpdated).format("lll")}
+          Last updated: {moment(bill.lastUpdated).format("lll")} - By{" "}
+          {bill.lastUpdatedBy}
         </p>
-        <p className="pb-3 font-[Lakes-Bold]">Contributors:</p>
+        <div className="flex font-[Lakes-Bold]">Contributors:</div>
+        <div className="flex items-center text-xs gap-1 mb-3">
+            <DotStatus status="settled" /> Settled
+            <DotStatus status="pending" /> Pending
+          </div>
         <div className="flex gap-4 justify-start">
           {bill.contributors.map((contributor) => (
-            <ContributorBubble key={contributor.userId}>
+            <ContributorBubble
+              key={contributor.userId}
+              badge={
+                <DotStatus
+                  status={contributor.isSettled ? "settled" : "pending"}
+                />
+              }
+            >
               {contributor.userName}
             </ContributorBubble>
           ))}
         </div>
+
+
 
         <div className="mt-3">
           <p className="pb-3 font-[Lakes-Bold]">Calculated Payout:</p>
@@ -336,7 +354,9 @@ function Home({ billId }: { billId?: string }) {
                       width={25}
                       height={25}
                     />
-                    <CashBubble>{Math.round(t.amount as number * 100) / 100}</CashBubble>
+                    <CashBubble>
+                      {Math.round((t.amount as number) * 100) / 100}
+                    </CashBubble>
                     <p className="text-xs font-[Lakes-Bold] my-1">
                       -- Transfer date: {moment(t.transferDate).format("lll")}
                     </p>
@@ -389,13 +409,17 @@ function Home({ billId }: { billId?: string }) {
   );
 }
 
-const ContributorBubble = ({ children, ...rest }) => {
+const ContributorBubble = ({ children, badge = null, ...rest }) => {
   return (
-    <div
-      className="bg-purple-800 text-sm font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
-      {...rest}
-    >
-      {children}
+    <div className="relative">
+      <div
+        className="bg-purple-800 text-sm font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
+        {...rest}
+      >
+        {children}
+      </div>
+
+      {badge && <div className="absolute right-0 top-0">{badge}</div>}
     </div>
   );
 };
@@ -410,6 +434,5 @@ const CashBubble = ({ children, ...rest }) => {
     </div>
   );
 };
-
 
 export default withAuth(Home);

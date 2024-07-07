@@ -7,11 +7,11 @@ export type bill = {
   createdAt?: Date;
   expenses: bill_expenses[];
   lastUpdated?: Date;
+  lastUpdatedBy?: string;
   status?: string;
   title?: string;
   totalAmount?: number;
 };
-
 export const billSchema = {
   name: 'bill',
   properties: {
@@ -21,6 +21,7 @@ export const billSchema = {
     createdAt: 'date?',
     expenses: 'bill_expenses[]',
     lastUpdated: 'date?',
+    lastUpdatedBy: 'string?',
     status: 'string?',
     title: 'string?',
     totalAmount: 'int?',
@@ -30,15 +31,18 @@ export const billSchema = {
 
 export type bill_contributors = {
   billContributionId?: string;
+  isSettled?: boolean;
+  settledDate?: Date;
   userId?: string;
   userName?: string;
 };
-
 export const bill_contributorsSchema = {
   name: 'bill_contributors',
   embedded: true,
   properties: {
     billContributionId: 'string?',
+    isSettled: 'bool?',
+    settledDate: 'date?',
     userId: 'string?',
     userName: 'string?',
   },

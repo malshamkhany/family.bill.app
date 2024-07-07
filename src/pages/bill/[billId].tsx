@@ -13,6 +13,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
+import { CheckBox } from "@/components/CheckBox";
 
 const BillPage = () => {
   const router = useRouter();
@@ -144,9 +145,9 @@ const BillPage = () => {
     const billToUpdate: any = {
       ...getValues(),
       lastUpdated: new Date(),
+      lastUpdatedBy: user.userName,
       totalAmount: sumOfValues,
     };
-    console.log("before", billToUpdate);
 
     db.billCollection
       .updateBill({ _id: billToUpdate._id }, { $set: { ...billToUpdate } })
@@ -160,8 +161,6 @@ const BillPage = () => {
       })
       .finally(() => setUpdating(false));
   }
-
-  console.log(billDateState)
 
   return (
     <>
@@ -339,6 +338,35 @@ const BillPage = () => {
           />
         </div>
 
+        <div className="flex justify-center mt-4">
+          <Controller
+            name="contributors"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <>
+                {value.map((c, idx) => {
+                  if (c.userName === user.userName) {
+                    return (
+                      <CheckBox
+                        checked={c.isSettled}
+                        key="checkbox-settle"
+                        label={"No more expenses to add"}
+                        onChange={(e) => {
+                          let valToUpdate = [...value];
+                          valToUpdate[idx].isSettled = e.target.checked;
+                          valToUpdate[idx].settledDate = new Date();
+                          onChange(valToUpdate);
+                        }}
+                      />
+                    );
+                  }
+                  return null;
+                })}
+              </>
+            )}
+          />
+        </div>
+
         <div className="text-center pt-8">
           <div className="totalAmount">
             {fields.length !== 0 && (
@@ -410,6 +438,19 @@ const BillSchema = z.object({
     })
   ),
   status: z.string(),
+  contributors: z
+    .array(
+      z
+        .object({
+          billContributionId: z.string(),
+          userId: z.string(),
+          userName: z.string(),
+          isSettled: z.boolean(),
+          settledDate: z.date(),
+        })
+        .optional()
+    )
+    .optional(),
 });
 
 // extract the inferred type
@@ -420,6 +461,7 @@ const newBill: Bill = {
   expenses: [],
   status: "pending",
   title: "bill",
+  contributors: [],
 };
 
 const newExpense = (label: string, paidBy: string, amount = 0) => {
@@ -467,6 +509,8 @@ const postBill = async (bill: any, db: MongoDbContext) => {
           billContributionId: created.insertedId.toString(),
           userId: billContribution.userId,
           userName: billContribution.userName,
+          isSettled: false,
+          settledDate: new Date(),
         },
       ];
     } else console.log("failed to create contributor");
