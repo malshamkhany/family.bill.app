@@ -144,7 +144,7 @@ export default function Transfer() {
           <div className="flex justify-between items-center my-5">
             <div className="capitalize">
               Bill for:{" "}
-              <span className="font-bold underline">
+              <span className="font-light underline">
                 {" "}
                 {moment(billData.billDate).format("MMM DD, YYYY")}
               </span>

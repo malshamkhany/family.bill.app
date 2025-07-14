@@ -14,6 +14,11 @@ import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CheckBox } from "@/components/CheckBox";
+import dynamic from "next/dynamic";
+const DatePicker = dynamic(() => import("react-datepicker"), {
+  ssr: false,
+});
+import "react-datepicker/dist/react-datepicker.css";
 
 const BillPage = () => {
   const router = useRouter();
@@ -162,6 +167,15 @@ const BillPage = () => {
       .finally(() => setUpdating(false));
   }
 
+  function handleDateUpdate(date: Date, update: any) {
+    if (date) {
+      const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      update(firstDayOfMonth);
+    } else {
+      update(null);
+    }
+  }
+
   return (
     <>
       <div className="header container mx-auto px-6 py-4 gap-2 ">
@@ -207,6 +221,7 @@ const BillPage = () => {
               <input
                 type="text"
                 required
+                placeholder="Title"
                 className="input"
                 style={{ margin: 0 }}
                 value={showMore.value}
@@ -321,17 +336,14 @@ const BillPage = () => {
           <Controller
             name="billDate"
             control={control}
-            render={({ field: { onChange, value, ...rest } }) => (
-              <input
-                {...rest}
-                type="date"
-                value={value ? moment(value).format("YYYY-MM-DD") : ""}
-                onChange={(e) => {
-                  const date = moment(e.target.value, "YYYY-MM-DD", true);
-                  if (date.isValid()) {
-                    onChange(date.toDate());
-                  }
-                }}
+            render={({ field: { onChange, value } }) => (
+              <DatePicker
+                selected={value}
+                onChange={(date: Date | null) =>
+                  handleDateUpdate(date, onChange)
+                }
+                dateFormat="MM / yyyy"
+                showMonthYearPicker
                 className="w-full p-2 border border-gray-300 text-black rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             )}
@@ -418,7 +430,7 @@ const pillButton = (label: string) => {
         (label !== "Add more"
           ? "bg-[#39ace7] hover:bg-blue-700 text-white"
           : "bg-white hover:bg-gray-100 text-gray-800 ") +
-        "font-bold py-2 px-4 rounded-full"
+        "font-light py-2 px-4 rounded-full"
       }
     >
       {label}
@@ -457,7 +469,7 @@ const BillSchema = z.object({
 export type Bill = z.infer<typeof BillSchema>;
 
 const newBill: Bill = {
-  billDate: new Date(),
+  billDate: moment().date(1).toDate(),
   expenses: [],
   status: "pending",
   title: "bill",

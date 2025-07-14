@@ -11,6 +11,7 @@
   --color2-light: #414c50;
   --color2-medium: #2d383c;
   --color2-dark: #192428;
+  
 }
 
 @media (prefers-color-scheme: dark) {
@@ -130,13 +131,6 @@ html {
   border-top-width: 0px;
   border-left-width: 1px;
   gap: 10px;
-}
-
-.expenseTitle {
-  font-size: 16px;
-  color: #fff;
-  font-weight: bold;
-  text-transform: capitalize;
 }
 
 .currentDueText {
@@ -275,7 +269,7 @@ button {
 .expenseTitle {
   font-size: 16px;
   color: #fff;
-  font-weight: bold;
+  font-weight: 300;
 }
 
 .createBillButton {

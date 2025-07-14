@@ -163,7 +163,7 @@ const HistoryList = () => {
                           <div key={n.paidBy + index}>
                             <div className="contributorItem grid grid-cols-8 gap-4 ">
                               <div className="flex gap-2 justify-left items-center border-r border-[#414c50] py-3 col-span-3">
-                                <div className="bg-[#414c50] text-white font-bold py-2 px-3 rounded-full">
+                                <div className="bg-[#414c50] text-white font-light py-2 px-3 rounded-full">
                                   {n.paidBy}
                                 </div>
                               </div>

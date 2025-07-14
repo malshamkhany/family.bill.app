@@ -242,7 +242,7 @@ function Home({ billId }: { billId?: string }) {
             <div key={n.paidBy + index}>
               <div className="contributorItem grid grid-cols-8 gap-4 ">
                 <div className="flex gap-2 justify-left items-center border-r border-[#414c50] py-3 col-span-3">
-                  <div className="bg-[#414c50] text-white font-bold py-2 px-3 rounded-full">
+                  <div className="bg-[#414c50] text-white font-light py-2 px-3 rounded-full">
                     {n.paidBy}
                   </div>
                 </div>
@@ -310,7 +310,7 @@ function Home({ billId }: { billId?: string }) {
               key={`${m.debtor}_${i}`}
             >
               <ContributorBubble>{m.debtor}</ContributorBubble>
-              <p className="font-bold text-md capitalize text-center">to</p>
+              <p className="font-light text-md capitalize text-center">to</p>
               <ContributorBubble>{m.creditor}</ContributorBubble>
               <Image
                 src="/icons/transfer.svg"
@@ -341,7 +341,7 @@ function Home({ billId }: { billId?: string }) {
                       {bill.contributors.find((u) => u.userId === t.from)
                         ?.userName || "Unknown"}
                     </ContributorBubble>
-                    <p className="font-bold text-md capitalize text-center">
+                    <p className="font-light text-md capitalize text-center">
                       to
                     </p>
                     <ContributorBubble>
@@ -413,7 +413,7 @@ const ContributorBubble = ({ children, badge = null, ...rest }) => {
   return (
     <div className="relative">
       <div
-        className="bg-purple-800 text-sm font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
+        className="bg-purple-800 text-sm font-[Lakes-ExtraBold] text-white font-light py-2 px-4 rounded-full"
         {...rest}
       >
         {children}
@@ -427,7 +427,7 @@ const ContributorBubble = ({ children, badge = null, ...rest }) => {
 const CashBubble = ({ children, ...rest }) => {
   return (
     <div
-      className="bg-green-600 text-sm font-[Lakes-ExtraBold] text-white font-bold py-2 px-4 rounded-full"
+      className="bg-green-600 text-sm font-[Lakes-ExtraBold] text-white font-light py-2 px-4 rounded-full"
       {...rest}
     >
       {children}
